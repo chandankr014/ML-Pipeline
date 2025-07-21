@@ -24,6 +24,32 @@ class RandomForestModel(BaseModel):
         """Return Random Forest model instance."""
         return RandomForestRegressor(random_state=self.random_state)
     
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid for Random Forest (<100 combinations).
+        """
+        return {
+            'regressor__n_estimators': [100, 300, 500],
+            'regressor__max_depth': [None, 20, 40],
+            'regressor__min_samples_split': [2, 10, 20],
+            'regressor__min_samples_leaf': [1, 4, 8],
+            'regressor__max_features': ['sqrt', 'log2'],
+        }
+
+    def get_search_strategy(self) -> str:
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_scoring_metric(self) -> str:
+        return 'r2'
+
+    # Keep get_param_distributions for backward compatibility, but recommend using get_optimized_param_grid
+    
     def get_param_distributions(self) -> Dict[str, Any]:
         """
         Return parameter distributions for RandomizedSearchCV.

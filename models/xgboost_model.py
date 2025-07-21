@@ -35,4 +35,31 @@ class XGBoostModel(BaseModel):
             'reg_lambda': 1,
             'random_state': self.random_state,
             'verbosity': 0
-        } 
+        }
+
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid for XGBoost (<100 combinations).
+        """
+        return {
+            'regressor__n_estimators': [100, 300],
+            'regressor__max_depth': [3, 7],
+            'regressor__learning_rate': [0.01, 0.1, 1.0],
+            'regressor__subsample': [0.7, 1.0],
+            'regressor__colsample_bytree': [0.7, 1.0],
+            'regressor__gamma': [0, 1],
+            'regressor__reg_alpha': [0.01, 0.1, 1.0],
+            'regressor__reg_lambda': [0.01, 0.1, 1.0],
+        }
+
+    def get_search_strategy(self) -> str:
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_scoring_metric(self) -> str:
+        return 'r2' 

@@ -67,3 +67,32 @@ class LightGBMModel(BaseModel):
             'random_state': self.random_state,
             'verbose': -1
         } 
+
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid for LightGBM (<100 combinations).
+        """
+        return {
+            'regressor__n_estimators': [100, 300],
+            'regressor__max_depth': [5, 10],
+            'regressor__learning_rate': [0.01, 0.1, 1.0],
+            'regressor__num_leaves': [31, 100],
+            'regressor__min_child_samples': [10, 30],
+            'regressor__subsample': [0.7, 1.0],
+            'regressor__colsample_bytree': [0.7, 1.0],
+            'regressor__reg_alpha': [0.01, 0.1, 1.0],
+            'regressor__reg_lambda': [0.01, 0.1, 1.0],
+            'regressor__boosting_type': ['gbdt'],
+        }
+
+    def get_search_strategy(self) -> str:
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_scoring_metric(self) -> str:
+        return 'r2' 
