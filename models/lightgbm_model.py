@@ -26,7 +26,7 @@ class LightGBMModel(BaseModel):
     
     def get_param_distributions(self) -> Dict[str, Any]:
         """
-        Return parameter distributions for RandomizedSearchCV.
+        Return parameter distributions for RandomizedSearchCV (legacy - large grid).
         
         Returns:
             Dictionary of parameter distributions for LightGBM
@@ -44,6 +44,24 @@ class LightGBMModel(BaseModel):
             'regressor__boosting_type': ['gbdt', 'dart'],
             'regressor__objective': ['regression', 'regression_l1', 'huber']
         }
+    
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid with reduced combinations.
+        Target: 216 combinations (3×3×3×2×2×2 = 216)
+        
+        Returns:
+            Dictionary of optimized parameters for LightGBM
+        """
+        return {
+            'regressor__n_estimators': [100, 300, 500],          # 3 values
+            'regressor__max_depth': [5, 9, 13],                  # 3 values
+            'regressor__learning_rate': [0.01, 0.1, 0.2],        # 3 values
+            'regressor__num_leaves': [31, 100],                  # 2 values
+            'regressor__subsample': [0.8, 1.0],                  # 2 values
+            'regressor__colsample_bytree': [0.8, 1.0]            # 2 values
+        }
+        # Total: 3×3×3×2×2×2 = 216 combinations → Use GridSearchCV
     
     def get_default_params(self) -> Dict[str, Any]:
         """

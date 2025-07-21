@@ -26,7 +26,7 @@ class RandomForestModel(BaseModel):
     
     def get_param_distributions(self) -> Dict[str, Any]:
         """
-        Return parameter distributions for RandomizedSearchCV.
+        Return parameter distributions for RandomizedSearchCV (legacy - large grid).
         
         Returns:
             Dictionary of parameter distributions for Random Forest
@@ -41,6 +41,23 @@ class RandomForestModel(BaseModel):
             'regressor__oob_score': [True, False],
             'regressor__criterion': ['squared_error', 'absolute_error', 'poisson']
         }
+    
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid with reduced combinations.
+        Target: 162 combinations (3×3×3×3×2 = 162)
+        
+        Returns:
+            Dictionary of optimized parameters for Random Forest
+        """
+        return {
+            'regressor__n_estimators': [100, 300, 500],          # 3 values
+            'regressor__max_depth': [None, 20, 40],              # 3 values  
+            'regressor__min_samples_split': [2, 10, 20],         # 3 values
+            'regressor__min_samples_leaf': [1, 4, 8],            # 3 values
+            'regressor__max_features': ['sqrt', 'log2'],         # 2 values
+        }
+        # Total: 3×3×3×3×2 = 162 combinations → Use RandomizedSearchCV with n_iter=50
     
     def get_default_params(self) -> Dict[str, Any]:
         """
