@@ -9,23 +9,21 @@ from typing import Dict, Any, List
 from .model_factory import ModelFactory
 
 
-def tune_all_models(X_train, 
-                   y_train, 
+def tune_all_models(X_train,
+                   y_train,
                    preprocessor,
                    models_to_tune: List[str] = None,
-                   n_iter: int = 50,  # n_iter is ignored for GridSearchCV
                    cv: int = 5,
                    n_jobs: int = -1,
                    random_state: int = 42) -> Dict[str, Any]:
     """
-    Tune hyperparameters for all models or specified models using GridSearchCV.
+    Tune hyperparameters for all models or specified models using the best search strategy.
     
     Args:
         X_train: Training features
         y_train: Training targets
         preprocessor: Preprocessing pipeline
         models_to_tune: List of model names to tune. If None, tune all models
-        n_iter: (ignored) Number of parameter settings sampled (for compatibility)
         cv: Cross-validation folds
         n_jobs: Number of jobs to run in parallel
         random_state: Random seed for reproducibility
@@ -33,14 +31,11 @@ def tune_all_models(X_train,
     Returns:
         Dictionary containing tuning results for each model
     """
-    # Get all available models
     available_models = ModelFactory.get_available_models()
     
-    # If no specific models specified, tune all
     if models_to_tune is None:
         models_to_tune = list(available_models.keys())
     
-    # Validate model names
     for model_name in models_to_tune:
         if model_name not in available_models:
             raise ValueError(f"Unknown model: {model_name}. Available models: {list(available_models.keys())}")
@@ -49,23 +44,19 @@ def tune_all_models(X_train,
     
     print(f"Starting hyperparameter tuning for {len(models_to_tune)} models...")
     print(f"Models to tune: {models_to_tune}")
-    print(f"Number of iterations: {n_iter} (ignored for GridSearchCV)")
     print(f"Cross-validation folds: {cv}")
     print("-" * 50)
     
     for model_name in models_to_tune:
         print(f"\nTuning {model_name}...")
         
-        # Create model instance
         model = ModelFactory.create_model(model_name, random_state)
         
-        # Perform hyperparameter tuning
         try:
             results = model.tune_hyperparameters(
                 X_train=X_train,
                 y_train=y_train,
                 preprocessor=preprocessor,
-                n_iter=n_iter,
                 cv=cv,
                 n_jobs=n_jobs,
                 random_state=random_state
@@ -75,7 +66,8 @@ def tune_all_models(X_train,
                 'model': model,
                 'best_params': results['best_params'],
                 'best_score': results['best_score'],
-                'best_estimator': results['best_estimator']
+                'best_estimator': results['best_estimator'],
+                'tuning_duration': results.get('tuning_duration', 0)
             }
             
             print(f"✓ {model_name} tuning completed successfully!")
@@ -93,8 +85,10 @@ def tune_all_models(X_train,
     
     for model_name, results in tuning_results.items():
         if 'error' not in results:
+            scoring_metric = results['model'].get_scoring_metric()
             print(f"{model_name}:")
-            print(f"  Best RMSE: {results['best_score']:.4f}")
+            print(f"  Best Score ({scoring_metric}): {results['best_score']:.4f}")
+            print(f"  Tuning Duration: {results['tuning_duration']:.2f}s")
             print(f"  Best params: {results['best_params']}")
         else:
             print(f"{model_name}: ERROR - {results['error']}")
@@ -103,9 +97,9 @@ def tune_all_models(X_train,
     return tuning_results
 
 
-def compare_tuned_vs_untuned(X_train, 
-                           y_train, 
-                           X_test, 
+def compare_tuned_vs_untuned(X_train,
+                           y_train,
+                           X_test,
                            y_test,
                            preprocessor,
                            tuning_results: Dict[str, Any]) -> pd.DataFrame:
@@ -141,8 +135,7 @@ def compare_tuned_vs_untuned(X_train,
         untuned_mae = mean_absolute_error(y_test, untuned_pred)
         
         # Test tuned model
-        tuned_pipeline = model.get_tuned_model(preprocessor)
-        tuned_pipeline.fit(X_train, y_train)
+        tuned_pipeline = results['best_estimator']
         tuned_pred = tuned_pipeline.predict(X_test)
         
         tuned_r2 = r2_score(y_test, tuned_pred)
@@ -164,7 +157,8 @@ def compare_tuned_vs_untuned(X_train,
             'RMSE_Improvement(%)': round(rmse_improvement_pct, 2),
             'Untuned_MAE': round(untuned_mae, 4),
             'Tuned_MAE': round(tuned_mae, 4),
-            'MAE_Improvement(%)': round(mae_improvement_pct, 2)
+            'MAE_Improvement(%)': round(mae_improvement_pct, 2),
+            'Tuning_Duration(s)': round(results.get('tuning_duration', 0), 2)
         })
     
     return pd.DataFrame(comparison_results) 

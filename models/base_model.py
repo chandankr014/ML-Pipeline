@@ -4,15 +4,16 @@ Provides common interface for hyperparameter tuning and model training.
 """
 
 from abc import ABC, abstractmethod
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 import numpy as np
-from typing import Dict, Any, Optional
+import time
+from typing import Dict, Any, Optional, Union, List
 
 
 class BaseModel(ABC):
     """Abstract base class for all models in the pipeline."""
-    
+
     def __init__(self, random_state: int = 42):
         """
         Initialize the base model.
@@ -25,74 +26,141 @@ class BaseModel(ABC):
         self.best_params = None
         self.best_score = None
         self.is_tuned = False
-        
+
     @abstractmethod
     def get_model(self):
         """Return the base model instance."""
         pass
-    
+
     @abstractmethod
     def get_param_distributions(self) -> Dict[str, Any]:
-        """Return parameter grid for GridSearchCV."""
+        """Return parameter grid for hyperparameter tuning."""
+        pass
+
+    @abstractmethod
+    def get_search_strategy(self) -> str:
+        """Return search strategy ('grid', 'random', 'bayesian')."""
         pass
     
-    def tune_hyperparameters(self, 
-                           X_train, 
-                           y_train, 
-                           preprocessor,
-                           n_iter: int = 100,  # n_iter is not used in GridSearchCV, but keep for compatibility
-                           cv: int = 5,
-                           n_jobs: int = -1,
-                           random_state: int = 42) -> Dict[str, Any]:
+    @abstractmethod
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """Return optimized parameter grid."""
+        pass
+
+    @abstractmethod
+    def get_search_budget(self) -> Dict[str, int]:
+        """Return search budget (e.g., n_iter, timeout)."""
+        pass
+
+    @abstractmethod
+    def get_scoring_metric(self) -> Union[str, List[str]]:
+        """Return scoring metric(s) for optimization."""
+        pass
+
+    def _calculate_param_combinations(self, param_grid: Dict[str, Any]) -> int:
+        """Calculate the total number of parameter combinations."""
+        if not param_grid:
+            return 0
+
+        # Calculate the number of combinations
+        combinations = 1
+        for key, values in param_grid.items():
+            combinations *= len(values)
+
+        return combinations
+
+    def tune_hyperparameters(self,
+                               X_train,
+                               y_train,
+                               preprocessor,
+                               cv: int = 5,
+                               n_jobs: int = -1,
+                               random_state: int = 42) -> Dict[str, Any]:
         """
-        Perform hyperparameter tuning using GridSearchCV.
+        Perform hyperparameter tuning using the specified search strategy.
         
         Args:
             X_train: Training features
             y_train: Training targets
             preprocessor: Preprocessing pipeline
-            n_iter: (ignored) Number of parameter settings sampled (for compatibility)
             cv: Cross-validation folds
             n_jobs: Number of jobs to run in parallel
             random_state: Random seed for reproducibility
             
         Returns:
-            Dictionary containing best parameters and score
+            Dictionary containing best parameters, score, and estimator
         """
-        # Create full pipeline with preprocessor
         pipeline = Pipeline([
             ('preprocessor', preprocessor),
             ('regressor', self.get_model())
         ])
+
+        search_strategy = self.get_search_strategy()
+        param_grid = self.get_optimized_param_grid()
+        search_budget = self.get_search_budget()
+        scoring = self.get_scoring_metric()
+
+        searcher = None
+        start_time = time.time()
         
-        # Get parameter grid
-        param_grid = self.get_param_distributions()
+        print(f"Using {search_strategy.capitalize()}SearchCV...")
         
-        # Perform GridSearchCV
-        grid_search = GridSearchCV(
-            pipeline,
-            param_grid=param_grid,
-            cv=cv,
-            scoring='neg_mean_squared_error',
-            n_jobs=n_jobs,
-            verbose=1
-        )
+        if search_strategy == 'grid':
+            searcher = GridSearchCV(
+                pipeline,
+                param_grid=param_grid,
+                cv=cv,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                verbose=1
+            )
+        elif search_strategy == 'random':
+            searcher = RandomizedSearchCV(
+                pipeline,
+                param_distributions=param_grid,
+                n_iter=search_budget.get('n_iter', 10),
+                cv=cv,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                random_state=self.random_state,
+                verbose=1
+            )
+        elif search_strategy == 'bayesian':
+            # Placeholder for Optuna integration
+            print("Bayesian search (Optuna) is not yet implemented. Falling back to RandomizedSearch.")
+            searcher = RandomizedSearchCV(
+                pipeline,
+                param_distributions=param_grid,
+                n_iter=search_budget.get('n_iter', 20),
+                cv=cv,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                random_state=self.random_state,
+                verbose=1
+            )
+        else:
+            raise ValueError(f"Unsupported search strategy: {search_strategy}")
+
+        # Fit the searcher
+        searcher.fit(X_train, y_train)
         
-        # Fit the grid search
-        grid_search.fit(X_train, y_train)
+        end_time = time.time()
+        tuning_duration = end_time - start_time
         
         # Store results
-        self.best_params = grid_search.best_params_
-        self.best_score = np.sqrt(-grid_search.best_score_)
+        self.best_params = searcher.best_params_
+        self.best_score = searcher.best_score_
         self.is_tuned = True
         
         print(f"Best parameters: {self.best_params}")
-        print(f"Best RMSE score: {self.best_score:.4f}")
+        print(f"Best score ({scoring}): {self.best_score:.4f}")
+        print(f"Tuning duration: {tuning_duration:.2f} seconds")
         
         return {
             'best_params': self.best_params,
             'best_score': self.best_score,
-            'best_estimator': grid_search.best_estimator_
+            'best_estimator': searcher.best_estimator_,
+            'tuning_duration': tuning_duration
         }
     
     def get_tuned_model(self, preprocessor, best_params=None):

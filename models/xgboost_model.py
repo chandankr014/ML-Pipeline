@@ -2,17 +2,24 @@
 XGBoost model implementation with hyperparameter tuning.
 """
 from xgboost import XGBRegressor
-from typing import Dict, Any
+from typing import Dict, Any, Union, List
 from .base_model import BaseModel
+
 
 class XGBoostModel(BaseModel):
     """XGBoost model with hyperparameter tuning capabilities."""
+
     def __init__(self, random_state: int = 42):
         super().__init__(random_state)
         self.model_name = "XGBoost"
+
     def get_model(self):
         return XGBRegressor(random_state=self.random_state, verbosity=0)
-    def get_param_distributions(self) -> Dict[str, Any]:
+
+    def get_full_param_grid(self) -> Dict[str, Any]:
+        """
+        Return full parameter grid for exhaustive search (for reference).
+        """
         return {
             'regressor__n_estimators': [50, 100, 200, 300],
             'regressor__max_depth': [3, 5, 7, 10],
@@ -23,6 +30,52 @@ class XGBoostModel(BaseModel):
             'regressor__reg_alpha': [0, 0.01, 0.1, 1],
             'regressor__reg_lambda': [0, 0.01, 0.1, 1]
         }
+
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return an optimized parameter grid for efficient hyperparameter tuning.
+        """
+        return {
+            'regressor__n_estimators': [100, 300, 500],
+            'regressor__max_depth': [3, 5, 7],
+            'regressor__learning_rate': [0.01, 0.1, 0.2],
+            'regressor__subsample': [0.8, 1.0],
+            'regressor__colsample_bytree': [0.8, 1.0],
+            'regressor__reg_alpha': [0.01, 0.1, 1.0],
+            'regressor__reg_lambda': [0.01, 0.1, 1.0],
+        }
+
+    def get_search_strategy(self) -> str:
+        """
+        Determine search strategy based on parameter grid size.
+        """
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_search_budget(self) -> Dict[str, int]:
+        """
+        Return search budget for RandomizedSearchCV.
+        """
+        return {'n_iter': 50}
+
+    def get_scoring_metric(self) -> str:
+        """
+        Return scoring metric for optimization.
+        """
+        return 'r2'
+
+    def get_param_distributions(self) -> Dict[str, Any]:
+        """
+        This method is now an alias for the optimized grid.
+        """
+        return self.get_optimized_param_grid()
+
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'n_estimators': 100,
@@ -31,7 +84,7 @@ class XGBoostModel(BaseModel):
             'subsample': 1.0,
             'colsample_bytree': 1.0,
             'gamma': 0,
-            'reg_alpha': 0,
+'reg_alpha': 0,
             'reg_lambda': 1,
             'random_state': self.random_state,
             'verbosity': 0

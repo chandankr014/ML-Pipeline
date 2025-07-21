@@ -3,13 +3,13 @@ LightGBM model implementation with hyperparameter tuning.
 """
 
 from lightgbm import LGBMRegressor
-from typing import Dict, Any
+from typing import Dict, Any, Union, List
 from .base_model import BaseModel
 
 
 class LightGBMModel(BaseModel):
     """LightGBM model with hyperparameter tuning capabilities."""
-    
+
     def __init__(self, random_state: int = 42):
         """
         Initialize LightGBM model.
@@ -19,17 +19,14 @@ class LightGBMModel(BaseModel):
         """
         super().__init__(random_state)
         self.model_name = "LightGBM"
-    
+
     def get_model(self):
         """Return LightGBM model instance."""
         return LGBMRegressor(random_state=self.random_state, verbose=-1)
-    
-    def get_param_distributions(self) -> Dict[str, Any]:
+
+    def get_full_param_grid(self) -> Dict[str, Any]:
         """
-        Return parameter distributions for RandomizedSearchCV.
-        
-        Returns:
-            Dictionary of parameter distributions for LightGBM
+        Return full parameter grid for exhaustive search (for reference).
         """
         return {
             'regressor__n_estimators': [50, 100, 200, 300, 500],
@@ -44,13 +41,54 @@ class LightGBMModel(BaseModel):
             'regressor__boosting_type': ['gbdt', 'dart'],
             'regressor__objective': ['regression', 'regression_l1', 'huber']
         }
-    
+
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return an optimized parameter grid for efficient hyperparameter tuning.
+        """
+        return {
+            'regressor__n_estimators': [100, 300, 500],
+            'regressor__max_depth': [5, 10, 20],
+            'regressor__learning_rate': [0.01, 0.1, 0.2],
+            'regressor__num_leaves': [20, 31, 50],
+            'regressor__reg_alpha': [0.01, 0.1, 1.0],
+            'regressor__reg_lambda': [0.01, 0.1, 1.0],
+        }
+
+    def get_search_strategy(self) -> str:
+        """
+        Determine search strategy based on parameter grid size.
+        """
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_search_budget(self) -> Dict[str, int]:
+        """
+        Return search budget for RandomizedSearchCV.
+        """
+        return {'n_iter': 50}
+
+    def get_scoring_metric(self) -> str:
+        """
+        Return scoring metric for optimization.
+        """
+        return 'r2'
+
+    def get_param_distributions(self) -> Dict[str, Any]:
+        """
+        This method is now an alias for the optimized grid.
+        """
+        return self.get_optimized_param_grid()
+
     def get_default_params(self) -> Dict[str, Any]:
         """
         Return default parameters for LightGBM.
-        
-        Returns:
-            Dictionary of default parameters
         """
         return {
             'n_estimators': 100,
