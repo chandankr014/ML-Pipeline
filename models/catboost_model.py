@@ -21,6 +21,13 @@ class CatBoostModel(BaseModel):
             'regressor__bagging_temperature': [0, 1, 5, 10],
             'regressor__border_count': [32, 64, 128]
         }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__iterations': [100, 300],
+            'regressor__depth': [3, 7],
+            'regressor__learning_rate': [0.01, 0.1],
+            'regressor__l2_leaf_reg': [1, 5],
+        }
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'iterations': 100,

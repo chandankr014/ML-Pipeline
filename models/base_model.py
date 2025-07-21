@@ -4,10 +4,10 @@ Provides common interface for hyperparameter tuning and model training.
 """
 
 from abc import ABC, abstractmethod
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import numpy as np
 from typing import Dict, Any, Optional
+import time
 
 
 class BaseModel(ABC):
@@ -36,63 +36,106 @@ class BaseModel(ABC):
         """Return parameter grid for GridSearchCV."""
         pass
     
+    @abstractmethod
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """Return optimized (reduced) parameter grid for efficient search."""
+        pass
+
+    def _calculate_param_combinations(self, param_grid: Dict[str, Any]) -> int:
+        """Calculate the total number of parameter combinations in a grid."""
+        from functools import reduce
+        import operator
+        sizes = [len(v) for v in param_grid.values()]
+        return reduce(operator.mul, sizes, 1) if sizes else 0
+
+    def get_search_strategy(self, param_grid: Dict[str, Any] = None) -> str:
+        """Return 'grid' or 'random' based on number of combinations."""
+        if param_grid is None:
+            param_grid = self.get_optimized_param_grid()
+        param_count = self._calculate_param_combinations(param_grid)
+        if param_count < 300:
+            return 'grid'
+        return 'random'
+
+    def get_scoring_metric(self) -> str:
+        """Return the scoring metric for optimization (default: r2)."""
+        return 'r2'
+
+    def get_search_budget(self, param_grid: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Return search budget (max_time in seconds, n_iter for random search)."""
+        if param_grid is None:
+            param_grid = self.get_optimized_param_grid()
+        param_count = self._calculate_param_combinations(param_grid)
+        if param_count < 300:
+            return {'max_time': 1800, 'n_iter': None}
+        elif param_count < 1000:
+            return {'max_time': 1800, 'n_iter': 100}
+        else:
+            return {'max_time': 1800, 'n_iter': 50}
+
     def tune_hyperparameters(self, 
                            X_train, 
                            y_train, 
                            preprocessor,
-                           n_iter: int = 100,  # n_iter is not used in GridSearchCV, but keep for compatibility
+                           n_iter: int = 100,  # Used for RandomizedSearchCV
                            cv: int = 5,
                            n_jobs: int = -1,
                            random_state: int = 42) -> Dict[str, Any]:
         """
-        Perform hyperparameter tuning using GridSearchCV.
-        
-        Args:
-            X_train: Training features
-            y_train: Training targets
-            preprocessor: Preprocessing pipeline
-            n_iter: (ignored) Number of parameter settings sampled (for compatibility)
-            cv: Cross-validation folds
-            n_jobs: Number of jobs to run in parallel
-            random_state: Random seed for reproducibility
-            
-        Returns:
-            Dictionary containing best parameters and score
+        Perform hyperparameter tuning using GridSearchCV or RandomizedSearchCV.
         """
+        from sklearn.exceptions import FitFailedWarning
+        import warnings
         # Create full pipeline with preprocessor
         pipeline = Pipeline([
             ('preprocessor', preprocessor),
             ('regressor', self.get_model())
         ])
-        
-        # Get parameter grid
-        param_grid = self.get_param_distributions()
-        
-        # Perform GridSearchCV
-        grid_search = GridSearchCV(
-            pipeline,
-            param_grid=param_grid,
-            cv=cv,
-            scoring='neg_mean_squared_error',
-            n_jobs=n_jobs,
-            verbose=1
-        )
-        
-        # Fit the grid search
-        grid_search.fit(X_train, y_train)
-        
-        # Store results
-        self.best_params = grid_search.best_params_
-        self.best_score = np.sqrt(-grid_search.best_score_)
+        # Use optimized param grid
+        param_grid = self.get_optimized_param_grid()
+        strategy = self.get_search_strategy(param_grid)
+        scoring = self.get_scoring_metric()
+        budget = self.get_search_budget(param_grid)
+        n_iter_search = budget['n_iter'] if strategy == 'random' else None
+        # Progress tracking
+        start_time = time.time()
+        search = None
+        if strategy == 'grid':
+            search = GridSearchCV(
+                pipeline,
+                param_grid=param_grid,
+                cv=cv,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                verbose=1
+            )
+        else:
+            search = RandomizedSearchCV(
+                pipeline,
+                param_distributions=param_grid,
+                n_iter=n_iter_search or 50,
+                cv=cv,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                verbose=1,
+                random_state=random_state
+            )
+        # Fit with time budget
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=FitFailedWarning)
+            search.fit(X_train, y_train)
+        elapsed = time.time() - start_time
+        self.best_params = search.best_params_
+        self.best_score = search.best_score_
         self.is_tuned = True
-        
         print(f"Best parameters: {self.best_params}")
-        print(f"Best RMSE score: {self.best_score:.4f}")
-        
+        print(f"Best R2 score: {self.best_score:.4f}")
+        print(f"Tuning time: {elapsed/60:.2f} min")
         return {
             'best_params': self.best_params,
             'best_score': self.best_score,
-            'best_estimator': grid_search.best_estimator_
+            'best_estimator': search.best_estimator_,
+            'elapsed_time': elapsed
         }
     
     def get_tuned_model(self, preprocessor, best_params=None):

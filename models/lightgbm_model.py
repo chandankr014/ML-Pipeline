@@ -45,6 +45,16 @@ class LightGBMModel(BaseModel):
             'regressor__objective': ['regression', 'regression_l1', 'huber']
         }
     
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__n_estimators': [100, 300, 500],
+            'regressor__max_depth': [5, 9, 13],
+            'regressor__learning_rate': [0.01, 0.1, 0.2],
+            'regressor__num_leaves': [31, 100],
+            'regressor__subsample': [0.8, 1.0],
+            'regressor__colsample_bytree': [0.8, 1.0]
+        }
+    
     def get_default_params(self) -> Dict[str, Any]:
         """
         Return default parameters for LightGBM.

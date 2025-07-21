@@ -35,4 +35,12 @@ class XGBoostModel(BaseModel):
             'reg_lambda': 1,
             'random_state': self.random_state,
             'verbosity': 0
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__n_estimators': [100, 300],
+            'regressor__max_depth': [3, 7],
+            'regressor__learning_rate': [0.01, 0.1],
+            'regressor__subsample': [0.8, 1.0],
+            'regressor__colsample_bytree': [0.8, 1.0],
         } 

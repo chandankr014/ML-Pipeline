@@ -28,4 +28,10 @@ class SVRModel(BaseModel):
             'kernel': 'rbf',
             'degree': 3,
             'gamma': 'scale'
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__C': [1, 10],
+            'regressor__epsilon': [0.01, 0.1],
+            'regressor__kernel': ['rbf', 'linear'],
         } 

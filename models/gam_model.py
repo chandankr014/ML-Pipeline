@@ -25,4 +25,9 @@ class GAMModel(BaseModel):
             'lam': 1.0,
             'n_splines': 20,
             'max_iter': 100
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__lam': [0.1, 1, 10],
+            'regressor__n_splines': [10, 20],
         } 

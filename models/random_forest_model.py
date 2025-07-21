@@ -42,6 +42,15 @@ class RandomForestModel(BaseModel):
             'regressor__criterion': ['squared_error', 'absolute_error', 'poisson']
         }
     
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__n_estimators': [100, 300, 500],
+            'regressor__max_depth': [None, 20, 40],
+            'regressor__min_samples_split': [2, 10, 20],
+            'regressor__min_samples_leaf': [1, 4, 8],
+            'regressor__max_features': ['sqrt', 'log2'],
+        }
+    
     def get_default_params(self) -> Dict[str, Any]:
         """
         Return default parameters for Random Forest.

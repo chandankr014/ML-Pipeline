@@ -29,4 +29,11 @@ class MLPRegressorModel(BaseModel):
             'learning_rate': 'constant',
             'max_iter': 1000,
             'random_state': self.random_state
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__hidden_layer_sizes': [(50,), (100,)],
+            'regressor__activation': ['relu', 'tanh'],
+            'regressor__solver': ['adam'],
+            'regressor__alpha': [0.0001, 0.001],
         } 
