@@ -1,9 +1,10 @@
 """
-Utility script for hyperparameter tuning of all models.
+Utility script for hyperparameter tuning of all models with smart search strategy.
 """
 
 import pandas as pd
 import numpy as np
+import time
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from typing import Dict, Any, List
 from .model_factory import ModelFactory
@@ -13,19 +14,19 @@ def tune_all_models(X_train,
                    y_train, 
                    preprocessor,
                    models_to_tune: List[str] = None,
-                   n_iter: int = 50,  # n_iter is ignored for GridSearchCV
+                   n_iter: int = None,
                    cv: int = 5,
                    n_jobs: int = -1,
                    random_state: int = 42) -> Dict[str, Any]:
     """
-    Tune hyperparameters for all models or specified models using GridSearchCV.
+    Tune hyperparameters for all models using smart search strategy.
     
     Args:
         X_train: Training features
         y_train: Training targets
         preprocessor: Preprocessing pipeline
         models_to_tune: List of model names to tune. If None, tune all models
-        n_iter: (ignored) Number of parameter settings sampled (for compatibility)
+        n_iter: Number of parameter settings sampled (for RandomizedSearchCV)
         cv: Cross-validation folds
         n_jobs: Number of jobs to run in parallel
         random_state: Random seed for reproducibility
@@ -46,18 +47,31 @@ def tune_all_models(X_train,
             raise ValueError(f"Unknown model: {model_name}. Available models: {list(available_models.keys())}")
     
     tuning_results = {}
+    total_start_time = time.time()
     
-    print(f"Starting hyperparameter tuning for {len(models_to_tune)} models...")
+    print("=" * 60)
+    print("SMART HYPERPARAMETER TUNING STARTED")
+    print("=" * 60)
     print(f"Models to tune: {models_to_tune}")
-    print(f"Number of iterations: {n_iter} (ignored for GridSearchCV)")
     print(f"Cross-validation folds: {cv}")
-    print("-" * 50)
+    print(f"Scoring metric: R² (higher is better)")
+    print("-" * 60)
     
-    for model_name in models_to_tune:
-        print(f"\nTuning {model_name}...")
+    for i, model_name in enumerate(models_to_tune, 1):
+        print(f"\n[{i}/{len(models_to_tune)}] Tuning {model_name}...")
         
         # Create model instance
         model = ModelFactory.create_model(model_name, random_state)
+        
+        # Show optimization strategy info
+        param_count = model._calculate_param_combinations()
+        strategy = model.get_search_strategy()
+        budget = model.get_search_budget()
+        
+        print(f"  Parameter combinations: {param_count:,}")
+        print(f"  Search strategy: {strategy.upper()}")
+        if strategy == 'random':
+            print(f"  RandomizedSearchCV iterations: {budget['n_iter']}")
         
         # Perform hyperparameter tuning
         try:
@@ -75,30 +89,60 @@ def tune_all_models(X_train,
                 'model': model,
                 'best_params': results['best_params'],
                 'best_score': results['best_score'],
-                'best_estimator': results['best_estimator']
+                'best_estimator': results['best_estimator'],
+                'search_strategy': results['search_strategy'],
+                'param_combinations': results['param_combinations'],
+                'elapsed_time': results['elapsed_time']
             }
             
-            print(f"✓ {model_name} tuning completed successfully!")
+            print(f"  ✓ {model_name} tuning completed successfully!")
+            print(f"  ✓ Best R² score: {results['best_score']:.4f}")
+            print(f"  ✓ Time elapsed: {results['elapsed_time']:.2f} seconds")
             
         except Exception as e:
-            print(f"✗ Error tuning {model_name}: {str(e)}")
+            print(f"  ✗ Error tuning {model_name}: {str(e)}")
             tuning_results[model_name] = {
                 'model': model,
                 'error': str(e)
             }
     
-    print("\n" + "=" * 50)
+    total_elapsed_time = time.time() - total_start_time
+    
+    print("\n" + "=" * 60)
     print("HYPERPARAMETER TUNING SUMMARY")
-    print("=" * 50)
+    print("=" * 60)
+    
+    successful_models = 0
+    total_combinations = 0
+    total_model_time = 0
     
     for model_name, results in tuning_results.items():
         if 'error' not in results:
+            successful_models += 1
+            total_combinations += results['param_combinations']
+            total_model_time += results['elapsed_time']
+            
             print(f"{model_name}:")
-            print(f"  Best RMSE: {results['best_score']:.4f}")
+            print(f"  Strategy: {results['search_strategy'].upper()}")
+            print(f"  Combinations: {results['param_combinations']:,}")
+            print(f"  Best R² score: {results['best_score']:.4f}")
+            print(f"  Time: {results['elapsed_time']:.2f}s")
             print(f"  Best params: {results['best_params']}")
         else:
             print(f"{model_name}: ERROR - {results['error']}")
         print()
+    
+    print(f"Successfully tuned models: {successful_models}/{len(models_to_tune)}")
+    print(f"Total parameter combinations: {total_combinations:,}")
+    print(f"Total tuning time: {total_elapsed_time:.2f} seconds")
+    print(f"Average time per model: {total_model_time/max(successful_models, 1):.2f} seconds")
+    
+    # Calculate computational savings
+    print(f"\nCOMPUTATIONAL SAVINGS:")
+    print(f"Previous approach would have tested: 23,691,744+ combinations")
+    print(f"Smart approach tested: {total_combinations:,} combinations")
+    reduction_pct = ((23691744 - total_combinations) / 23691744) * 100
+    print(f"Reduction: {reduction_pct:.1f}%")
     
     return tuning_results
 
@@ -125,10 +169,15 @@ def compare_tuned_vs_untuned(X_train,
     """
     comparison_results = []
     
+    print("\n" + "=" * 60)
+    print("TUNED vs UNTUNED MODEL COMPARISON")
+    print("=" * 60)
+    
     for model_name, results in tuning_results.items():
         if 'error' in results:
             continue
             
+        print(f"\nEvaluating {model_name}...")
         model = results['model']
         
         # Test untuned model
@@ -156,6 +205,9 @@ def compare_tuned_vs_untuned(X_train,
 
         comparison_results.append({
             'Model': model_name,
+            'Search_Strategy': results['search_strategy'].upper(),
+            'Param_Combinations': results['param_combinations'],
+            'Tuning_Time(s)': round(results['elapsed_time'], 2),
             'Untuned_R2': round(untuned_r2, 4),
             'Tuned_R2': round(tuned_r2, 4),
             'R2_Improvement(%)': round(r2_improvement_pct, 2),
@@ -166,5 +218,66 @@ def compare_tuned_vs_untuned(X_train,
             'Tuned_MAE': round(tuned_mae, 4),
             'MAE_Improvement(%)': round(mae_improvement_pct, 2)
         })
+        
+        print(f"  Untuned R²: {untuned_r2:.4f} | Tuned R²: {tuned_r2:.4f} | Improvement: {r2_improvement_pct:.2f}%")
     
-    return pd.DataFrame(comparison_results) 
+    df = pd.DataFrame(comparison_results)
+    print(f"\nComparison completed for {len(comparison_results)} models.")
+    return df
+
+
+def generate_performance_report(tuning_results: Dict[str, Any], 
+                              comparison_df: pd.DataFrame = None) -> Dict[str, Any]:
+    """
+    Generate a comprehensive performance report.
+    
+    Args:
+        tuning_results: Results from tune_all_models function
+        comparison_df: DataFrame from compare_tuned_vs_untuned function
+        
+    Returns:
+        Dictionary with performance metrics and summary
+    """
+    report = {
+        'summary': {},
+        'model_details': {},
+        'computational_savings': {}
+    }
+    
+    # Calculate summary statistics
+    successful_models = [r for r in tuning_results.values() if 'error' not in r]
+    total_combinations = sum(r['param_combinations'] for r in successful_models)
+    total_time = sum(r['elapsed_time'] for r in successful_models)
+    avg_time = total_time / len(successful_models) if successful_models else 0
+    
+    report['summary'] = {
+        'total_models_tuned': len(successful_models),
+        'total_parameter_combinations': total_combinations,
+        'total_tuning_time_seconds': round(total_time, 2),
+        'average_time_per_model_seconds': round(avg_time, 2),
+        'max_time_per_model_seconds': max([r['elapsed_time'] for r in successful_models]) if successful_models else 0
+    }
+    
+    # Model-specific details
+    for model_name, results in tuning_results.items():
+        if 'error' not in results:
+            report['model_details'][model_name] = {
+                'search_strategy': results['search_strategy'],
+                'parameter_combinations': results['param_combinations'],
+                'best_r2_score': round(results['best_score'], 4),
+                'tuning_time_seconds': round(results['elapsed_time'], 2),
+                'best_parameters': results['best_params']
+            }
+    
+    # Computational savings
+    original_combinations = 23691744  # From previous calculation
+    reduction_pct = ((original_combinations - total_combinations) / original_combinations) * 100
+    
+    report['computational_savings'] = {
+        'original_combinations': original_combinations,
+        'optimized_combinations': total_combinations,
+        'reduction_percentage': round(reduction_pct, 1),
+        'speedup_factor': round(original_combinations / total_combinations, 1) if total_combinations > 0 else 0
+    }
+    
+    return report 
