@@ -24,4 +24,26 @@ class RidgeRegressionModel(BaseModel):
             'fit_intercept': True,
             'solver': 'auto',
             'random_state': self.random_state
-        } 
+        }
+
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        """
+        Return optimized parameter grid for Ridge Regression (<100 combinations).
+        """
+        return {
+            'regressor__alpha': [0.01, 0.1, 1.0, 10.0],
+            'regressor__fit_intercept': [True, False],
+            'regressor__solver': ['auto', 'sag'],
+        }
+
+    def get_search_strategy(self) -> str:
+        param_count = self._calculate_param_combinations(self.get_optimized_param_grid())
+        if param_count < 100:
+            return 'grid'
+        elif param_count < 1000:
+            return 'random'
+        else:
+            return 'bayesian'
+
+    def get_scoring_metric(self) -> str:
+        return 'r2' 
