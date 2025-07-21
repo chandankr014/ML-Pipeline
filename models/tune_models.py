@@ -59,27 +59,30 @@ def tune_all_models(X_train,
         # Create model instance
         model = ModelFactory.create_model(model_name, random_state)
         
-        # Perform hyperparameter tuning
+        # Use model's optimized grid, strategy, and scoring
+        param_grid = model.get_optimized_param_grid()
+        strategy = model.get_search_strategy(param_grid)
+        scoring = model.get_scoring_metric()
+        budget = model.get_search_budget(param_grid)
+        n_iter_search = budget['n_iter'] if strategy == 'random' else None
         try:
             results = model.tune_hyperparameters(
                 X_train=X_train,
                 y_train=y_train,
                 preprocessor=preprocessor,
-                n_iter=n_iter,
+                n_iter=n_iter_search or 50,
                 cv=cv,
                 n_jobs=n_jobs,
                 random_state=random_state
             )
-            
             tuning_results[model_name] = {
                 'model': model,
                 'best_params': results['best_params'],
                 'best_score': results['best_score'],
-                'best_estimator': results['best_estimator']
+                'best_estimator': results['best_estimator'],
+                'elapsed_time': results.get('elapsed_time', None)
             }
-            
             print(f"✓ {model_name} tuning completed successfully!")
-            
         except Exception as e:
             print(f"✗ Error tuning {model_name}: {str(e)}")
             tuning_results[model_name] = {
@@ -94,8 +97,10 @@ def tune_all_models(X_train,
     for model_name, results in tuning_results.items():
         if 'error' not in results:
             print(f"{model_name}:")
-            print(f"  Best RMSE: {results['best_score']:.4f}")
+            print(f"  Best R2: {results['best_score']:.4f}")
             print(f"  Best params: {results['best_params']}")
+            if results.get('elapsed_time'):
+                print(f"  Tuning time: {results['elapsed_time']/60:.2f} min")
         else:
             print(f"{model_name}: ERROR - {results['error']}")
         print()

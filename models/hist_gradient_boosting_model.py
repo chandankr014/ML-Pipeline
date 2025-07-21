@@ -21,6 +21,13 @@ class HistGradientBoostingModel(BaseModel):
             'regressor__l2_regularization': [0, 0.1, 1.0, 10.0],
             'regressor__max_bins': [255, 512]
         }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__learning_rate': [0.01, 0.1],
+            'regressor__max_iter': [100, 300],
+            'regressor__max_depth': [3, None],
+            'regressor__min_samples_leaf': [20, 50],
+        }
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'learning_rate': 0.1,

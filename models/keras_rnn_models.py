@@ -78,6 +78,15 @@ class RNNModel(BaseModel):
             'regressor__batch_size': [16, 32],
             'regressor__timesteps': [1, 3, 5]
         }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__units': [32, 64],
+            'regressor__layers': [1],
+            'regressor__lr': [0.001, 0.01],
+            'regressor__epochs': [30],
+            'regressor__batch_size': [32],
+            'regressor__timesteps': [1, 3]
+        }
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'units': 32,
@@ -116,6 +125,15 @@ class LSTMModel(BaseModel):
             'regressor__epochs': [20, 30],
             'regressor__batch_size': [16, 32],
             'regressor__timesteps': [1, 3, 5]
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__units': [32, 64],
+            'regressor__layers': [1],
+            'regressor__lr': [0.001, 0.01],
+            'regressor__epochs': [30],
+            'regressor__batch_size': [32],
+            'regressor__timesteps': [1, 3]
         }
     def get_default_params(self) -> Dict[str, Any]:
         return {
@@ -156,6 +174,15 @@ class BiLSTMModel(BaseModel):
             'regressor__batch_size': [16, 32],
             'regressor__timesteps': [1, 3, 5]
         }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__units': [32, 64],
+            'regressor__layers': [1],
+            'regressor__lr': [0.001, 0.01],
+            'regressor__epochs': [30],
+            'regressor__batch_size': [32],
+            'regressor__timesteps': [1, 3]
+        }
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'units': 32,
@@ -194,6 +221,15 @@ class GRUModel(BaseModel):
             'regressor__epochs': [20, 30],
             'regressor__batch_size': [16, 32],
             'regressor__timesteps': [1, 3, 5]
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__units': [32, 64],
+            'regressor__layers': [1],
+            'regressor__lr': [0.001, 0.01],
+            'regressor__epochs': [30],
+            'regressor__batch_size': [32],
+            'regressor__timesteps': [1, 3]
         }
     def get_default_params(self) -> Dict[str, Any]:
         return {

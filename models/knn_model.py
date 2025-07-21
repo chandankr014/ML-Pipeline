@@ -27,4 +27,10 @@ class KNNModel(BaseModel):
             'algorithm': 'auto',
             'leaf_size': 30,
             'p': 2
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__n_neighbors': [3, 7],
+            'regressor__weights': ['uniform', 'distance'],
+            'regressor__algorithm': ['auto'],
         } 

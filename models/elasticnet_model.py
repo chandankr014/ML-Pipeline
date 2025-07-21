@@ -19,6 +19,13 @@ class ElasticNetModel(BaseModel):
             'regressor__fit_intercept': [True, False],
             'regressor__selection': ['cyclic', 'random']
         }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__alpha': [0.01, 0.1, 1.0, 10.0],
+            'regressor__l1_ratio': [0.1, 0.5, 1.0],
+            'regressor__fit_intercept': [True, False],
+            'regressor__selection': ['cyclic']
+        }
     def get_default_params(self) -> Dict[str, Any]:
         return {
             'alpha': 1.0,

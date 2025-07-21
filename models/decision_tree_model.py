@@ -28,4 +28,12 @@ class DecisionTreeModel(BaseModel):
             'max_features': None,
             'criterion': 'squared_error',
             'random_state': self.random_state
+        }
+    def get_optimized_param_grid(self) -> Dict[str, Any]:
+        return {
+            'regressor__max_depth': [None, 5, 10],
+            'regressor__min_samples_split': [2, 10],
+            'regressor__min_samples_leaf': [1, 4],
+            'regressor__max_features': ['sqrt', None],
+            'regressor__criterion': ['squared_error']
         } 
