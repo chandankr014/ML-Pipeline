@@ -1,0 +1,183 @@
+{
+    "Random Forest": {
+        "model": "<models.random_forest_model.RandomForestModel object at 0x0000014A678E6710>",
+        "best_params": {
+            "regressor__n_estimators": 300,
+            "regressor__min_samples_split": 2,
+            "regressor__min_samples_leaf": 1,
+            "regressor__max_features": null,
+            "regressor__max_depth": null,
+            "regressor__criterion": "absolute_error"
+        },
+        "best_score": 0.7745066159906177,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 RandomForestRegressor(criterion='absolute_error',\n                                       max_features=None, n_estimators=300,\n                                       random_state=42))])",
+        "search_strategy": "random",
+        "param_combinations": 2700,
+        "elapsed_time": 80.70265507698059
+    },
+    "LightGBM": {
+        "model": "<models.lightgbm_model.LightGBMModel object at 0x0000014A635CC790>",
+        "best_params": {
+            "regressor__subsample": 0.8,
+            "regressor__objective": "regression_l1",
+            "regressor__num_leaves": 31,
+            "regressor__n_estimators": 300,
+            "regressor__min_child_samples": 10,
+            "regressor__max_depth": 5,
+            "regressor__learning_rate": 0.1,
+            "regressor__colsample_bytree": 1.0
+        },
+        "best_score": 0.8118016555276402,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 LGBMRegressor(max_depth=5, min_child_samples=10,\n                               n_estimators=300, objective='regression_l1',\n                               random_state=42, subsample=0.8, verbose=-1))])",
+        "search_strategy": "random",
+        "param_combinations": 10368,
+        "elapsed_time": 49.86956286430359
+    },
+    "Ridge Regression": {
+        "model": "<models.ridge_regression_model.RidgeRegressionModel object at 0x0000014A635CE800>",
+        "best_params": {
+            "regressor__alpha": 1.0,
+            "regressor__fit_intercept": true,
+            "regressor__solver": "auto"
+        },
+        "best_score": 0.7254722837287195,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor', Ridge(random_state=42))])",
+        "search_strategy": "grid",
+        "param_combinations": 60,
+        "elapsed_time": 1.1061062812805176
+    },
+    "Lasso Regression": {
+        "model": "<models.lasso_regression_model.LassoRegressionModel object at 0x0000014A67664B80>",
+        "best_params": {
+            "regressor__alpha": 0.01,
+            "regressor__fit_intercept": true,
+            "regressor__selection": "random"
+        },
+        "best_score": 0.7256577410680654,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 Lasso(alpha=0.01, max_iter=10000, random_state=42,\n                       selection='random'))])",
+        "search_strategy": "grid",
+        "param_combinations": 20,
+        "elapsed_time": 0.4150197505950928
+    },
+    "ElasticNet": {
+        "model": "<models.elasticnet_model.ElasticNetModel object at 0x0000014A635AA3E0>",
+        "best_params": {
+            "regressor__alpha": 0.01,
+            "regressor__fit_intercept": true,
+            "regressor__l1_ratio": 0.1,
+            "regressor__selection": "random"
+        },
+        "best_score": 0.7260371103420533,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 ElasticNet(alpha=0.01, l1_ratio=0.1, max_iter=10000,\n                            random_state=42, selection='random'))])",
+        "search_strategy": "grid",
+        "param_combinations": 100,
+        "elapsed_time": 1.3786242008209229
+    },
+    "Decision Tree": {
+        "model": "<models.decision_tree_model.DecisionTreeModel object at 0x0000014A62529150>",
+        "best_params": {
+            "regressor__criterion": "absolute_error",
+            "regressor__max_depth": 5,
+            "regressor__max_features": null,
+            "regressor__min_samples_leaf": 2,
+            "regressor__min_samples_split": 2
+        },
+        "best_score": 0.7075539556552275,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 DecisionTreeRegressor(criterion='absolute_error', max_depth=5,\n                                       min_samples_leaf=2, random_state=42))])",
+        "search_strategy": "grid",
+        "param_combinations": 384,
+        "elapsed_time": 5.678574562072754
+    },
+    "ExtraTreeRegressor": {
+        "model": "<models.extratree_regressor_model.ExtraTreeRegressorModel object at 0x0000014A63568700>",
+        "best_params": {
+            "regressor__criterion": "squared_error",
+            "regressor__max_depth": 7,
+            "regressor__max_features": null,
+            "regressor__min_samples_leaf": 4,
+            "regressor__min_samples_split": 2
+        },
+        "best_score": 0.6914558428660689,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 ExtraTreeRegressor(max_depth=7, max_features=None,\n                                    min_samples_leaf=4, random_state=42))])",
+        "search_strategy": "grid",
+        "param_combinations": 224,
+        "elapsed_time": 2.7355704307556152
+    },
+    "XGBoost": {
+        "model": "<models.xgboost_model.XGBoostModel object at 0x0000014A676C9810>",
+        "best_params": {
+            "regressor__colsample_bytree": 1.0,
+            "regressor__learning_rate": 0.2,
+            "regressor__max_depth": 3,
+            "regressor__n_estimators": 300,
+            "regressor__subsample": 0.6
+        },
+        "best_score": 0.8216355662785496,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(...\n                              feature_types=None, feature_weights=None,\n                              gamma=None, grow_policy=None,\n                              importance_type=None,\n                              interaction_constraints=None, learning_rate=0.2,\n                              max_bin=None, max_cat_threshold=None,\n                              max_cat_to_onehot=None, max_delta_step=None,\n                              max_depth=3, max_leaves=None,\n                              min_child_weight=None, missing=nan,\n                              monotone_constraints=None, multi_strategy=None,\n                              n_estimators=300, n_jobs=None,\n                              num_parallel_tree=None, ...))])",
+        "search_strategy": "grid",
+        "param_combinations": 576,
+        "elapsed_time": 211.89761519432068
+    },
+    "CatBoost": {
+        "model": "<models.catboost_model.CatBoostModel object at 0x0000014A624AAC80>",
+        "best_params": {
+            "regressor__learning_rate": 0.1,
+            "regressor__l2_leaf_reg": 5,
+            "regressor__iterations": 300,
+            "regressor__depth": 3,
+            "regressor__border_count": 64,
+            "regressor__bagging_temperature": 1
+        },
+        "best_score": 0.8407990840367503,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 <catboost.core.CatBoostRegressor object at 0x0000014A676BE920>)])",
+        "search_strategy": "random",
+        "param_combinations": 2880,
+        "elapsed_time": 193.80005955696106
+    },
+    "HistGradientBoosting": {
+        "model": "<models.hist_gradient_boosting_model.HistGradientBoostingModel object at 0x0000014A676BD120>",
+        "best_params": {
+            "regressor__min_samples_leaf": 20,
+            "regressor__max_iter": 300,
+            "regressor__max_depth": 5,
+            "regressor__max_bins": 255,
+            "regressor__learning_rate": 0.1,
+            "regressor__l2_regularization": 0.1
+        },
+        "best_score": 0.8188678953323573,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 HistGradientBoostingRegressor(l2_regularization=0.1,\n                                               max_depth=5, max_iter=300,\n                                               random_state=42))])",
+        "search_strategy": "random",
+        "param_combinations": 1152,
+        "elapsed_time": 7.8119120597839355
+    },
+    "SVR": {
+        "model": "<models.svr_model.SVRModel object at 0x0000014A676BDED0>",
+        "best_params": {
+            "regressor__C": 100,
+            "regressor__degree": 2,
+            "regressor__epsilon": 0.5,
+            "regressor__gamma": "auto",
+            "regressor__kernel": "rbf"
+        },
+        "best_score": 0.8427403559023731,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor', SVR(C=100, degree=2, epsilon=0.5, gamma='auto'))])",
+        "search_strategy": "grid",
+        "param_combinations": 384,
+        "elapsed_time": 9.878116130828857
+    },
+    "KNN": {
+        "model": "<models.knn_model.KNNModel object at 0x0000014A624AB460>",
+        "best_params": {
+            "regressor__algorithm": "auto",
+            "regressor__leaf_size": 10,
+            "regressor__n_neighbors": 7,
+            "regressor__p": 2,
+            "regressor__weights": "distance"
+        },
+        "best_score": 0.7494459015071996,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 KNeighborsRegressor(leaf_size=10, n_neighbors=7,\n                                     weights='distance'))])",
+        "search_strategy": "grid",
+        "param_combinations": 400,
+        "elapsed_time": 4.513604164123535
+    }
+}

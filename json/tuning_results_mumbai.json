@@ -1,0 +1,18 @@
+{
+    "LSTM": {
+        "model": "<models.keras_rnn_models.LSTMModel object at 0x000002AA267A3D30>",
+        "best_params": {
+            "regressor__batch_size": 16,
+            "regressor__epochs": 30,
+            "regressor__layers": 2,
+            "regressor__lr": 0.01,
+            "regressor__timesteps": 1,
+            "regressor__units": 16
+        },
+        "best_score": 0.8530959812907183,
+        "best_estimator": "Pipeline(steps=[('preprocessor',\n                 ColumnTransformer(transformers=[('num',\n                                                  Pipeline(steps=[('seasonal_imputer',\n                                                                   SeasonalRegressorImputer()),\n                                                                  ('scaler',\n                                                                   StandardScaler())]),\n                                                  ['year', 'month', 'U10',\n                                                   'V10', 'WS', 'WD', 'SP',\n                                                   'BLH', 'TCC', 'T2M', 'D2M',\n                                                   'RH', 'SSR', 'TP']),\n                                                 ('cat',\n                                                  Pipeline(steps=[('imputer',\n                                                                   SimpleImputer(strategy='most_frequent')),\n                                                                  ('encoder',\n                                                                   OneHotEncoder(handle_unknown='ignore'))]),\n                                                  [])])),\n                ('regressor',\n                 KerasRegressor(batch_size=16, epochs=30, input_dim=1, layers=2, lr=0.01, model=<function build_lstm_model at 0x000002AA1C4CB130>, random_state=42, timesteps=1, units=16, verbose=0))])",
+        "search_strategy": "grid",
+        "param_combinations": 144,
+        "elapsed_time": 1247.9900126457214
+    }
+}
